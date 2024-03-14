@@ -2,6 +2,10 @@ Free Bee web client
 ===================
 This is the JavaScript-based web client for Free Bee.
 
+*For reasons unknown, Free Bee suddenly disappeared. This fork has been
+rewritten slightly so that it can be hosted statically. All original
+functionality has been maintained to the best of my knowledge.*
+
 What is Free Bee?
 -----------------
 Free Bee is an enhanced Free Software clone of The New York Times game

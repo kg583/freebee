@@ -222,9 +222,7 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
     <hr>
     <div class="navbar">
       <a href="../index.html">Home</a> |
-      <a href="#top">Play</a> |
-      <a href="../download.html">Download</a> |
-      <a href="../api.html">API</a>
+      <a href="#top">Play</a>
 		</div>
 	  <hr>
   </div>
@@ -329,14 +327,17 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
       <button class="dmb" onclick="darkmode()">Switch Dark/Light mode</button>
     </span>
     <span class="dictionary">
-      <a href="https://github.com/freebee-game/enable/issues">Request dictionary changes</a>
+      <a href="https://github.com/kg583/freebee/issues">Request dictionary changes</a>
     </span>
   </div>
 
   <hr>
 
-  <p id="footer">Free Bee is brought to you by Studio Urban Homestead | OpenBSD httpd</p>
+  <p id="footer">Free Bee was brought to you by Studio Urban Homestead | OpenBSD httpd<br>
+    This clone is currently maintained by kg583</p>
 
+  <script src="puzzles.js"></script>
+  <script src="words.js"></script>
   <script type="text/javascript">
     var all;
     var daily_play;
@@ -556,60 +557,41 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
       localStorage.setItem("foundwords", JSON.stringify(foundlist));
     }
 
-    function add_points() {
-      var one = 0, two = 0, three = 0, four = 0, five = 0, six = 0;
-      var i = 0, j = 0;
+    function is_pangram(word) {
+      var pangram = true;
 
+      for (var letter of letters) {
+        if (!word.includes(letter.at(-1))) {
+          pangram = false;
+        }
+      }
+
+      return pangram;
+    }
+
+    function get_points(word) {
+      if (word.length == 4) {
+        return 1;
+      }
+
+      if (is_pangram(word)) {
+        return word.length + 7;
+      } else {
+        return word.length;
+      }
+    }
+
+    function add_points() {
       if (daily_play === 1) {
         save_word();
       }
 
-      i = guess.length;
-      if (i < 7) {
-        if (i == 4) {
-          i = 1;
-        }
-        points = points + i;
-
-        return;
-      }
-
-      i = 0;
-      while (i < guess.length) {
-        for (j = 0; j < 7; j++) {
-          if (guess[i] == letters[j]) {
-            if (j == 0) {
-        one = 1;
-            }
-            if (j == 1) {
-        two = 1;
-            }
-            if (j == 2) {
-        three = 1;
-            }
-            if (j == 3) {
-        four = 1;
-            }
-            if (j == 4) {
-        five = 1;
-            }
-            if (j == 5) {
-        six = 1;
-            }
-          }
-        }
-        i = i + 1;
-      }
-
-      if (one == 1 && two == 1 && three == 1 && four == 1 && five == 1 && six == 1) {
-        points = points + guess.length + 7;
+      if (is_pangram(guess)) {
         document.getElementById("no-message").style.display = "none";
         document.getElementById("pangram").style.display = "inline";
-
-        return;
       }
 
-      points = points + guess.length;
+      points = points + get_points(guess);
     }
 
     function found_word() {
@@ -792,42 +774,77 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
       display();
     }
 
-    function get_yesterday() {
-      var xhttp = new XMLHttpRequest();
-      xhttp.onreadystatechange = function() {
-        if (this.readyState == 4 && this.status == 200) {
-          var gameObj = JSON.parse(this.responseText);
-          yesterdaywords = gameObj.words;
-          yesterdaytotal = gameObj.total;
-          yesterdaywordlist = gameObj.wordlist;
-        }
-      };
+    function get_puzzle(date, seed) {
+      if (seed == 0) {
+        seed = new Date(date.getFullYear(), date.getMonth(), date.getDay(), 0, 0, 0).getTime();
+      }
 
-      xhttp.open("GET", "yesterday", true);
-      xhttp.send();
+      var puzzle = allpuzzles.at(seed % numpuzzles)
+      var start = Math.floor(seed / numpuzzles) % 7;
+
+      return puzzle.slice(start) + puzzle.slice(0, start);
+    }
+
+    function get_words(puzzle) {
+      var puzzlewords = [];
+
+      for (var word of allwords) {
+        var valid = true;
+        for (var letter of word) {
+          if (!puzzle.includes(letter)) {
+            valid = false;
+            break;
+          }
+        }
+
+        if (valid) {
+          puzzlewords.push(word);
+        }
+      }
+
+      return puzzlewords;
+    }
+
+    function game_obj(date, seed) {
+      var puzzle = get_puzzle(date, seed);
+      var puzzlewordlist = get_words(puzzle);
+
+      return {
+        wordlist: puzzlewordlist,
+        words: puzzlewordlist.length,
+        total: puzzlewordlist.map(get_points).reduce((a, b) => a + b, 0),
+        letters: puzzle.slice(0, 6),
+        center: puzzle.at(6)
+      }
+    }
+
+    function get_yesterday() {
+      var date = new Date();
+
+      date.setDate(date.getDate() - 1);
+      var gameObj = game_obj(date, 0);
+
+      yesterdaywords = gameObj.words;
+      yesterdaytotal = gameObj.total;
+      yesterdaywordlist = gameObj.wordlist;
     }
 
     function get_today() {
-      var xhttp = new XMLHttpRequest();
-      xhttp.onreadystatechange = function() {
-        if (this.readyState == 4 && this.status == 200) {
-          var gameObj = JSON.parse(this.responseText);
-          todayletters[0] = gameObj.letters[0];
-          todayletters[1] = gameObj.letters[1];
-          todayletters[2] = gameObj.letters[2];
-          todayletters[3] = gameObj.letters[3];
-          todayletters[4] = gameObj.letters[4];
-          todayletters[5] = gameObj.letters[5];
-          todayletters[6] = "7" + gameObj.center;
-          todaywords = gameObj.words;
-          todaytotal = gameObj.total;
-          todaywordlist = gameObj.wordlist;
-          daily();
-        }
-      };
+      var date = new Date();
 
-      xhttp.open("GET", "today", true);
-      xhttp.send();
+      var gameObj = game_obj(date, 0);
+
+      todayletters[0] = gameObj.letters[0];
+      todayletters[1] = gameObj.letters[1];
+      todayletters[2] = gameObj.letters[2];
+      todayletters[3] = gameObj.letters[3];
+      todayletters[4] = gameObj.letters[4];
+      todayletters[5] = gameObj.letters[5];
+      todayletters[6] = "7" + gameObj.center;
+      todaywords = gameObj.words;
+      todaytotal = gameObj.total;
+      todaywordlist = gameObj.wordlist;
+      daily();
     }
 
     window.onload = function() {
@@ -883,7 +900,6 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
     }
 
     function random() {
-      var xhttp = new XMLHttpRequest();
       var i;
 
       daily_play = 0;
@@ -917,28 +933,21 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
       document.getElementById("play6").style.display = "none";
       document.getElementById("play7").style.display = "none";
 
-      xhttp.onreadystatechange = function() {
-        if (this.readyState == 4 && this.status == 200) {
-          var gameObj = JSON.parse(this.responseText);
-          letters[0] = gameObj.letters[0];
-          letters[1] = gameObj.letters[1];
-          letters[2] = gameObj.letters[2];
-          letters[3] = gameObj.letters[3];
-          letters[4] = gameObj.letters[4];
-          letters[5] = gameObj.letters[5];
-          letters[6] = "7" + gameObj.center;
-          words = gameObj.words;
-          total = gameObj.total;
-          wordlist = gameObj.wordlist;
-          set_rank();
-          display();
-          document.getElementById("random-answers").style.display = "block";
-          document.getElementById("restart-daily-button").style.visibility = "visible";
-        }
-      };
-
-      xhttp.open("GET", "../../cgi-bin/random", true);
-      xhttp.send();
+      var gameObj = game_obj(new Date(), Math.random() * (1 << 31))
+      letters[0] = gameObj.letters[0];
+      letters[1] = gameObj.letters[1];
+      letters[2] = gameObj.letters[2];
+      letters[3] = gameObj.letters[3];
+      letters[4] = gameObj.letters[4];
+      letters[5] = gameObj.letters[5];
+      letters[6] = "7" + gameObj.center;
+      words = gameObj.words;
+      total = gameObj.total;
+      wordlist = gameObj.wordlist;
+      set_rank();
+      display();
+      document.getElementById("random-answers").style.display = "block";
+      document.getElementById("restart-daily-button").style.visibility = "visible";
     }
 
     function show_random() {
