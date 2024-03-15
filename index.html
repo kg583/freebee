@@ -771,7 +771,7 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
     function get_puzzle(date, seed) {
       if (seed == 0) {
-        seed = new Date(date.getFullYear(), date.getMonth(), date.getDate(), 0, 0, 0, 0).getTime();
+        seed = Date.UTC(date.getFullYear(), date.getMonth(), date.getDate());
       }
 
       var puzzle = allpuzzles.at(seed % numpuzzles)
