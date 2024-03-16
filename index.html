@@ -774,7 +774,7 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
         seed = Date.UTC(date.getFullYear(), date.getMonth(), date.getDate());
       }
 
-      var puzzle = allpuzzles.at(seed % numpuzzles)
+      var puzzle = allpuzzles.at(seed % 131071 % numpuzzles)
       var start = Math.floor(seed / numpuzzles) % 7;
 
       return puzzle.slice(start) + puzzle.slice(0, start);
