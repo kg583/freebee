@@ -552,10 +552,10 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
       localStorage.setItem("foundwords", JSON.stringify(foundlist));
     }
 
-    function is_pangram(word) {
+    function is_pangram(word, wordletters) {
       var pangram = true;
 
-      for (var letter of letters) {
+      for (var letter of wordletters) {
         if (!word.includes(letter.at(-1))) {
           pangram = false;
         }
@@ -564,12 +564,12 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
       return pangram;
     }
 
-    function get_points(word) {
+    function get_points(word, wordletters) {
       if (word.length == 4) {
         return 1;
       }
 
-      if (is_pangram(word)) {
+      if (is_pangram(word, wordletters)) {
         return word.length + 7;
       } else {
         return word.length;
@@ -581,12 +581,12 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
         save_word();
       }
 
-      if (is_pangram(guess)) {
+      if (is_pangram(guess, letters)) {
         document.getElementById("no-message").style.display = "none";
         document.getElementById("pangram").style.display = "inline";
       }
 
-      points = points + get_points(guess);
+      points = points + get_points(guess, letters);
     }
 
     function found_word() {
@@ -807,7 +807,7 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
       return {
         wordlist: puzzlewordlist,
         words: puzzlewordlist.length,
-        total: puzzlewordlist.map(get_points).reduce((a, b) => a + b, 0),
+        total: puzzlewordlist.map(x => get_points(x, puzzle.slice(0, 6))).reduce((a, b) => a + b, 0),
         letters: puzzle.slice(0, 6),
         center: puzzle.at(6)
       }
