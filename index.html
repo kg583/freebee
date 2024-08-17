@@ -777,27 +777,32 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
       var puzzle = allpuzzles.at(seed % 131071 % numpuzzles)
       var start = Math.floor(seed / numpuzzles) % 7;
 
-      if (date.getFullYear() == 2024 && date.getMonth() == 5 && date.getDate() == 16) {
-        puzzle = "fathsre";
+      if (date.getMonth() == 8 && date.getDate() == 18) {
+        puzzle = "eighxnt";
         start = 1;
       }
 
       return puzzle.slice(start) + puzzle.slice(0, start);
     }
 
+    function valid_word(puzzle, word) {
+      var current = "";
+
+      for (var letter of word) {
+        current += letter;
+        if (puzzle.includes(current)) {
+          current = "";
+        }
+      }
+
+      return current == "";
+    }
+
     function get_words(puzzle) {
       var puzzlewords = [];
 
       for (var word of allwords) {
-        var valid = true;
-        for (var letter of word) {
-          if (!puzzle.includes(letter)) {
-            valid = false;
-            break;
-          }
-        }
-
-        if (valid && word.includes(puzzle.at(-1))) {
+        if (valid_word(puzzle, word) && word.includes(puzzle.at(-1))) {
           puzzlewords.push(word);
         }
       }
